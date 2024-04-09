@@ -71,7 +71,7 @@ def get_hits(sim, N, top_k=(1, 5, 10)):
 
 
 def logsoftmax(src,index,num_nodes):
-  # º∆À„logsumexp
+  # ËÆ°ÁÆólogsumexp
   out_max = scatter_max(src, index=index, dim=-1, dim_size=num_nodes)[0][index]
   src = src- torch.log(scatter_add((src-out_max).exp(), index, dim=-1, dim_size=num_nodes)[index] + 1e-16) - out_max
   return src
@@ -241,10 +241,11 @@ def cross_graph_MF(switching_prob, P_TRANS_INTRA,P_TRANS_INTER,N,device,window_s
   
   P_TRANS =  torch.sparse.mm(torch.transpose(P_TRANS_INTRA,0,1),switch_diag_intra) + torch.sparse.mm(torch.transpose(P_TRANS_INTER,0,1),switch_diag_inter)
   
-  # º∆À„∑÷Ω‚æÿ’Û
+  # ËÆ°ÁÆóÂàÜËß£Áü©Èòµ
   I = torch.eye(N).to(device)
   
   P_TRANS = torch.transpose(P_TRANS, 0, 1)
+  P_TRANS = P_TRANS.to_sparse()
   for r in range(window_size):
       if r == 0:
          S1 = I
@@ -267,7 +268,7 @@ def cross_graph_MF(switching_prob, P_TRANS_INTRA,P_TRANS_INTER,N,device,window_s
   S = S1 + S1.T
   S = S / (2 * window_size * b)
   S = torch.clamp(S, min=1e-12) 
-  S = torch.log(S) # ≤ªƒ‹+1
+  S = torch.log(S) # ‰∏çËÉΩ+1
   
   U, sigma, V = torch.svd_lowrank(S.float(),q=size,niter=1) # faster
   return U,sigma,V
@@ -406,7 +407,7 @@ def cal_rdd(G1,G2):
   D2 = np.array([G2.degree(i) for i in range(len(G2))])
   D1 = D1.reshape((-1,1))
   D2 = D1.reshape((1,-1))
-  #¡–œÚ¡ø
+  #ÂàóÂêëÈáè
   y_cols = len(D2.flatten())
   x_rows = len(D1.flatten())
   
